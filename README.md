@@ -3,3 +3,5 @@
 Implement logistic regression from scratch, Apply logistic regression on a natural language processing task, Test using logistic regression, Perform error analysis.
 
 The maon objectives are as followings:
+
+1. Implement Logistic Regression on Twitter text data to label them as postive or negative tweets based on the sentiment labels they hold.
