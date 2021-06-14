@@ -1,10 +1,15 @@
 import re
 import string
+from types import DynamicClassAttribute
+from typing_extensions import Unpack
 import numpy as np
 
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import TweetTokenizer
+
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
 
 
 def process_tweet(tweet):
@@ -69,3 +74,86 @@ def build_freqs(tweets, ys):
                 freqs[pair] = 1
 
     return freqs
+
+def test_lookup(func):
+    freqs = {
+        ('sad',0) : 4,
+        ('happy', 1) : 12,
+        ('oppressed', 0 ) : 7
+    }
+    word = 'happy'
+    label = 1
+    if func(freqs, word, label) == 12:
+        return 'SUCCESS !!'
+
+    return 'Failed Sanity Check !'
+
+def lookup(freqs, word, label):
+    # Input :
+    #     freqs : a dictionary with the frequency of
+    #     each pair ( or tuple )
+    #     word : the word to look up 
+    #     label : the label corresponding to the word
+    # Output :
+    #     n: the number of times the word with the
+    #     corresponding label appears
+    #  
+    n = 0 #freqs.get((word, label), 0)
+
+    pair = (word, label)
+
+    if(pair in freqs):
+        n = freqs[pair]
+
+    return n
+
+def confidence_ellipse(x, y, ax, n_std = 3.0, facecolor = 'none' , **kwargs):
+    # Create a plot of the covariance confidence interval of x and y
+    # Parameters
+    # x, y : array_like, shape(n, ), Input Data   
+    # ax : matplotlib.axes.Axes
+    # The axes object to draw the ellipse into
+    # n_std : float
+    # The number of standard deviations to draw the ellipses radiuses.
+
+    # Returns
+
+    # matplotlib.patches.Ellipse
+    # Other parameters
+
+    # kwargs : '-matplotlib.patches.Patch' properties
+
+    if x.size != y.size:
+        raise ValueError('The dimensions of x and y dont match')
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1] / np.sqrt( cov[0,0]*cov[1,1])
+
+    # Using a special case to obtain the eigenvalues of 
+    # this two dimensional dataset
+
+    ell_radius_x = np.sqrt( 1 + pearson )
+    ell_radius_y = np.sqrt( 1 - pearson )
+
+    ellipse = Ellipse ( (0,0), 
+                        width = ell_radius_x*2,
+                        height = ell_radius_y*2,
+                        facecolor = facecolor,
+                        **kwargs
+                                                )
+
+    scale_x = np.sqrt(cov[0,0])*n_std
+    mean_x = np.mean(x)
+
+    #Calculating the standard deviation of y...
+    scale_y = np.sqrt(cov[0,0])*n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+            .rotate_deg(45) \
+            .scale(scale_x, scale_y) \
+            .translate(mean_x, mean_y)
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
+
