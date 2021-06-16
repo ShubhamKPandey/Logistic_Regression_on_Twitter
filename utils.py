@@ -1,7 +1,6 @@
 import re
 import string
 from types import DynamicClassAttribute
-from typing_extensions import Unpack
 import numpy as np
 
 from nltk.corpus import stopwords
